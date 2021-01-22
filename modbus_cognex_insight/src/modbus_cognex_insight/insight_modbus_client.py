@@ -9,17 +9,17 @@
 # Copyright (c) 2013, Generation Robots.
 # All rights reserved.
 # www.generationrobots.com
-#   
+#
 # Redistribution and use in source and binary forms, with or without 
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # 1. Redistributions of source code must retain the above copyright notice,
 #  this list of conditions and the following disclaimer.
-# 
+#
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #  this list of conditions and the following disclaimer in the documentation 
 #  and/or other materials provided with the distribution.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, 
 # THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR 
@@ -31,7 +31,7 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF 
 # THE POSSIBILITY OF SUCH DAMAGE. 
-# 
+#
 # The views and conclusions contained in the software and documentation are 
 # those of the authors and should not be interpreted as representing official 
 # policies, either expressed or implied, of the FreeBSD Project.
@@ -65,7 +65,7 @@ class InsightModbusClient(ModbusWrapperClient):
 
         # Note: Listener not started as reading is requested manually, but a heartbeat is required to keep the modbus server alive
         self.startHeartbeat()
-        
+
 
     def startVisualInspection(self,job_id,timeout=5.0):
         """
@@ -75,13 +75,13 @@ class InsightModbusClient(ModbusWrapperClient):
             :param timeout: Duration how long this method should wait for a positive response from the part inspection. The default value should be sufficient.
             :type timeout: float
         """
-        rospy.loginfo("Setting new cognex job id: %d", job_id) 
-        self.setOutput(self.write_start,[job_id])            
+        rospy.loginfo("Setting new cognex job id: %d", job_id)
+        self.setOutput(self.write_start,[job_id])
         self.changeTrigger()
-        rospy.sleep(0.5)            
+        rospy.sleep(0.5)
         start_time = rospy.get_time()
         return self.__getResponse(job_id,start_time,timeout)
-    
+
     def __getResponse(self,id,start_time,timeout):
         """
             Reads the registers from the camera in the correct order:
@@ -90,7 +90,7 @@ class InsightModbusClient(ModbusWrapperClient):
             job_pass
             job_fail
             barcode
-            
+
             :param job_id: The job from which we expect an answer
             :type job_id: int
             :param start_time: Contains the time when the request was sent
@@ -102,7 +102,7 @@ class InsightModbusClient(ModbusWrapperClient):
             rospy.loginfo("Timeout in getting response from Insight")
             return False
         tmp = self.readRegisters()
-        
+
         if tmp is None:
             rospy.logwarn("Nothing received from modbus server")
             return False
@@ -114,13 +114,12 @@ class InsightModbusClient(ModbusWrapperClient):
         my_string = self.getString(30014,string_length)
         barcode = self.getString(30014+string_length,string_length)[:-1]
         response = [is_alive, job_id,job_pass,job_fail,my_string,barcode]
-#         print "Response for debugging:",response
         return self.__evaluateResponse(id,response,start_time,timeout)
 
     def __evaluateResponse(self,job_id,response,start_time,timeout):
         """
             Evaluates the response
-            
+
             :param job_id: The job from which we expect an answer
             :type job_id: int
             :param response: Contains the response from the modbus registers [is_alive,job_id,job_pass,job_fail,barcode]
@@ -134,9 +133,9 @@ class InsightModbusClient(ModbusWrapperClient):
         """
         if not response[0]:
             return False
-        elif job_id == 0: # job_id 0 is the is_alive req    
+        elif job_id == 0: # job_id 0 is the is_alive req
             return True
-        if job_id == response[1]:            
+        if job_id == response[1]:
             if job_id == 3:
                 my_string = response[4]
                 if len(my_string) > 0:
@@ -154,7 +153,7 @@ class InsightModbusClient(ModbusWrapperClient):
         return self.__getResponse(job_id,start_time,timeout)
 
     def __decodeString(self,ascii):
-        """    
+        """
             Converts an ascii number to a string
             :param ascii: Integer code of a string encoded in ascii
             :type ascii: int
@@ -163,8 +162,8 @@ class InsightModbusClient(ModbusWrapperClient):
         """
         second = ascii%256
         first = (ascii-second)/256
-        return str(chr(first))+str(chr(second)) 
-                
+        return str(chr(first))+str(chr(second))
+
     def getString(self,start,num_registers):
         """
             Reads num_registers from start and tries to recover the string that has been send by the modbus server
@@ -182,7 +181,7 @@ class InsightModbusClient(ModbusWrapperClient):
                 continue
             msg += self.__decodeString(ascii)
         return msg
-    
+
     def changeTrigger(self):
         """
             Changes the trigger on the camera to manual and back to continous. This gives the camera some time to update its parameters
@@ -190,14 +189,14 @@ class InsightModbusClient(ModbusWrapperClient):
         def reg(letter,number):
             """
                 Returns an integer for a cell value
-                
+
                 Usable triggers on the insight explorer software
                 * 0: Camera
                 * 1: Continous
                 * 2: External
                 * 3: Manual
                 * 4: Network
-                
+
             """
             v=ord(letter.lower())-ord('a')
             v=v<<10
@@ -211,25 +210,20 @@ class InsightModbusClient(ModbusWrapperClient):
             self.setOutput(v, [4])
         else:
             self.setOutput(v, [1])
-        
-        
-    
+
+
     def startHeartbeat(self):
         """
             Non blocking call to start the heartbeat loop
         """
         self.post.__sendHeartbeat()
-            
-    
+
     def __sendHeartbeat(self):
         """
             Sends an is alive signal to the cognex camera. If this is not send, the camera times out 1 hour after the last message in the best case scenario
         """
-        
+
         while not rospy.is_shutdown():
             rospy.sleep(5)
             self.setOutput(self.write_start+1,0)
-    
 
-
-    
