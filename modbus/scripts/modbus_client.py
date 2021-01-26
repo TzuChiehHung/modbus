@@ -41,8 +41,8 @@ from modbus.modbus_wrapper_client import ModbusWrapperClient
 from std_msgs.msg import Int32MultiArray as HoldingRegister
 
 NUM_REGISTERS = 20
-ADDRESS_READ_START = 40000
-ADDRESS_WRITE_START = 40020
+ADDRESS_READ_START = 0
+ADDRESS_WRITE_START = 0
 
 if __name__=="__main__":
     rospy.init_node("modbus_client")
@@ -52,7 +52,7 @@ if __name__=="__main__":
     To see sent something to the modbus use a publisher on the topic /modbus_wrapper/output
     This file contains a sample publisher.
     """)
-    host = "192.168.0.123"
+    host = "192.168.255.1"
     port = 502
     if rospy.has_param("~ip"):
         host =  rospy.get_param("~ip")
@@ -69,7 +69,7 @@ if __name__=="__main__":
     rospy.loginfo("Setup complete")
 
     # start listening to modbus and publish changes to the rostopic
-    modclient.startListening()
+    modclient.startListening(unit=0x01)
     rospy.loginfo("Listener started")
 
     #################
@@ -78,8 +78,8 @@ if __name__=="__main__":
     register = 40020
     value = 1
     timeout = 0.5
-    modclient.setOutput(register,value,timeout)
-    rospy.loginfo("Set and individual output")
+    modclient.setOutput(register,value,timeout, unit=0x01)
+    rospy.loginfo("Set an individual output")
     #################
 
 

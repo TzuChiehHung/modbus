@@ -46,7 +46,7 @@ except Exception as e:
     print("pymodbus does not seem to be installed.\nInstall it by:\nsudo apt-get install python-pymodbus")
     print(e)
     exit()
-from std_msgs.msg import Int32MultiArray as HoldingRegister
+from std_msgs.msg import UInt16MultiArray as HoldingRegister
 from modbus.post_threading import Post
 from threading import Lock
 
@@ -59,7 +59,7 @@ class ModbusWrapperClient():
         Wrapper that integrates python modbus into standardized ros msgs.
         The wrapper is able to read from and write to a standard modbus tcp/ip server.
     """
-    def __init__(self,host,port=502,rate=50,reset_registers=True,sub_topic="modbus_wrapper/output",pub_topic="modbus_wrapper/input"):
+    def __init__(self,host,port=502,unit=0x00, rate=50,reset_registers=True,sub_topic="modbus_wrapper/output",pub_topic="modbus_wrapper/input"):
         """
             Use subscribers and publisher to communicate with the modbus server. Check the scripts for example code.
             :param host: Contains the IP adress of the modbus server
@@ -77,6 +77,8 @@ class ModbusWrapperClient():
             rospy.logwarn("Could not get a modbus connection to the host modbus. %s", str(e))
             raise e
             return
+
+        self.__unit = unit
         self.__rate = rate
         self.__reading_delay = 1/rate
         self.post = Post(self)
@@ -219,7 +221,7 @@ class ModbusWrapperClient():
         with self.__mutex:
             try:
                 if not rospy.is_shutdown() :
-                    self.client.write_registers(address, values)
+                    self.client.write_registers(address, values, unit=self.__unit)
                     self.output = values
             except Exception as e:
                 rospy.logwarn("Could not write values %s to address %d. Exception %s",str(values),address, str(e))
@@ -241,14 +243,14 @@ class ModbusWrapperClient():
         tmp = None
         with self.__mutex:
             try:
-                tmp = self.client.read_holding_registers(address,num_registers).registers
+                tmp = self.client.read_input_registers(address,num_registers, unit=self.__unit).registers
             except Exception as e:
                 rospy.logwarn("Could not read on address %d. Exception: %s",address,str(e))
                 raise e
 
             if self.__reset_registers:
                 try:
-                    self.client.write_registers(address, [0 for i in range(num_registers)])
+                    self.client.write_registers(address, [0 for i in range(num_registers)], unit=self.__unit)
                 except Exception as e:
                     rospy.logwarn("Could not write to address %d. Exception: %s", address,str(e))
                     raise e
