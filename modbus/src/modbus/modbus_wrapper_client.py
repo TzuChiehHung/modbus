@@ -208,7 +208,8 @@ class ModbusWrapperClient():
                 break
         if not output_changed:
             return
-        self.__writeRegisters(self.__writing_registers_start,msg.data)
+        # self.__writeRegisters(self.__writing_registers_start,msg.data)
+        self.__writeRegisters(msg.layout.data_offset, msg.data)
 
     def __writeRegisters(self,address,values):
         """
