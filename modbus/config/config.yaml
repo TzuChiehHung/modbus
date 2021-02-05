@@ -1,0 +1,8 @@
+host: 192.168.255.1
+port: 502
+unit: 0x00
+sub_topic: input
+pub_topic: output
+address_read_start: 0
+address_write_start: 0
+num_registers: 20

@@ -39,19 +39,19 @@
 import rospy
 from modbus.modbus_wrapper_client import ModbusWrapperClient
 
-if __name__=="__main__":
-    rospy.init_node("modbus_client")
+if __name__=='__main__':
+    rospy.init_node('modbus_client')
 
-    host = rospy.get_param('host', '192.168.255.1')
-    port = rospy.get_param('port', 502)
-    unit = rospy.get_param('unit', 0x01)
+    host = rospy.get_param('~host', '192.168.255.1')
+    port = rospy.get_param('~port', 502)
+    unit = rospy.get_param('~unit', 0x00)
 
-    sub_topic = rospy.get_param('sub_topic', 'modbus_wrapper/output')
-    pub_topic = rospy.get_param('pub_topic', 'modbus_wrapper/input')
+    sub_topic = rospy.get_param('~sub_topic', 'output')
+    pub_topic = rospy.get_param('~pub_topic', 'input')
 
-    address_read_start = int(rospy.get_param('address_read_start', 0))
-    address_write_start = int(rospy.get_param('address_write_start', 0))
-    num_registers = int(rospy.get_param("num_registers", 20))
+    address_read_start = int(rospy.get_param('~address_read_start', 0))
+    address_write_start = int(rospy.get_param('~address_write_start', 0))
+    num_registers = int(rospy.get_param('~num_registers', 20))
 
     rospy.loginfo('Modbus server: {}:{}'.format(host, port))
     rospy.loginfo('Modbus id: {}'.format(str(unit)))
@@ -66,11 +66,11 @@ if __name__=="__main__":
 
     nh.setReadingRegisters(address_read_start, num_registers)
     nh.setWritingRegisters(address_write_start, num_registers)
-    rospy.loginfo("Setup complete")
+    rospy.loginfo('Setup complete')
 
     # start listening to modbus and publish changes to the rostopic
     nh.startListening()
-    rospy.loginfo("Listener started")
+    rospy.loginfo('Listener started')
 
     rospy.spin()
 
